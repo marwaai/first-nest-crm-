@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { CompanyService } from './companies.service';
 import { CreateCompanyDto } from './dtos/create.company.dto';
-import { UpdateCompanyDto } from './dtos/update-company.dto';
+import { UpdateCompanyDto } from './dtos/update.company.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'; 
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { SetMetadata } from '@nestjs/common';

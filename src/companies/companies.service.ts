@@ -4,7 +4,7 @@ import { Repository, ILike } from 'typeorm';
 import { Contact } from '../contacts/contact.entity';
 import { Company } from '../companies/company.entity';
 import { CreateCompanyDto } from './dtos/create.company.dto';
-import { UpdateCompanyDto } from './dtos/update-company.dto';
+import { UpdateCompanyDto } from './dtos/update.company.dto';
 @Injectable()
 export class CompanyService{
 constructor(

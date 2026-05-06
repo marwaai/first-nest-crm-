@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Contact } from '../contacts/contact.entity';
 import { Company } from '../companies/company.entity';
-
+import {UpdateContactDto} from "./dto/update.contact.dto"
 @Injectable()
 export class ContactsService {
   constructor(
@@ -55,7 +55,7 @@ return (await this.contactRepository.save(contactInstance)) as unknown as Contac
   }
 
   // 4. تحديث بيانات Contact
-  async update(id: string, updateData: any): Promise<Contact> {
+  async update(id: string, updateData: UpdateContactDto): Promise<Contact> {
     await this.contactRepository.update(id, updateData);
     return this.findOne(id);
   }

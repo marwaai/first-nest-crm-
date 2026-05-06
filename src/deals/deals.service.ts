@@ -3,7 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Deal } from '../deals/deal.entity';
 import { Company } from '../companies/company.entity';
-
+import {CreateDealDto} from "./dto/create.deals.dto"
+import {UpdateDealDto} from "./dto/update.deals.dto"
 @Injectable()
 export class dealsService {
   constructor(
@@ -16,7 +17,7 @@ export class dealsService {
 
   // 1. إنشاء Contact جديد (إلزامي وجود Company)
 // 1. إنشاء Contact جديد
-  async create(CreateDealDto: any, companyId: string): Promise<Deal> {
+  async create(CreateDealDto: CreateDealDto, companyId: string): Promise<Deal> {
     const company = await this.companyRepository.findOne({ where: { id: companyId } });
     
     if (!company) {
@@ -55,7 +56,7 @@ return (await this.dealsRepository.save(dealsInstance)) as unknown as Deal;
   }
 
   // 4. تحديث بيانات Contact
-  async update(id: string, updateData: any): Promise<Deal> {
+  async update(id: string, updateData: UpdateDealDto): Promise<Deal> {
     await this.dealsRepository.update(id, updateData);
     return this.findOne(id);
   }
