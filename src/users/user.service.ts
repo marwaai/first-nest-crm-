@@ -4,7 +4,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './user.entity';
 import * as bcrypt from 'bcrypt';
-
+import { UserRole } from './user.entity'; // Don't forget this import!
+import {UpdateUserDto} from "./dtos/user.update"
 @Injectable()
 export class UsersService {
   constructor(
@@ -32,7 +33,7 @@ export class UsersService {
 
     const newUser = this.usersRepository.create({
       ...userData,
-      password: hashedPassword,
+      password: hashedPassword,role: UserRole.AGENT, // Forces every new signup to be an Agent
     });
 
     const savedUser = await this.usersRepository.save(newUser);
@@ -67,4 +68,30 @@ export class UsersService {
     const user = await this.findById(id); // بنتأكد إنه موجود الأول
     await this.usersRepository.remove(user);
   }
+
+
+async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
+  // Preload looks up the user by ID and "maps" the new data onto the entity
+  const user = await this.usersRepository.preload({
+    id: id,
+    ...updateUserDto,
+  });
+
+  if (!user) {
+    throw new NotFoundException('المستخدم غير موجود لتحديثه');
+  }
+
+  // If the admin is updating the password, we must hash it again!
+  if (updateUserDto.password) {
+    const salt = await bcrypt.genSalt();
+    user.password = await bcrypt.hash(updateUserDto.password, salt);
+  }
+
+  const updatedUser = await this.usersRepository.save(user);
+
+  // Return the user without the password
+  const { password, ...result } = updatedUser;
+  return result as User;
+}
+
 }
