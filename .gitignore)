@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+
+# NestJS Build Output
+dist/
+artifacts/
+*.tsbuildinfo
+
+# Environment Variables (CRITICAL: Keeps your DB passwords safe)
+.env
+.env.production
+.env.staging
+.env.development
+.env.local
+.env.test
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+error.log
+
+# Testing
+coverage/
+
+# IDEs & System Files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
