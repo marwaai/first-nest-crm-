@@ -89,9 +89,3 @@ async remove(id: number, currentUser: any): Promise<void> {
 * [ ] Implement Refresh Tokens.
 * [ ] Integrate Swagger for API Documentation.
 * [ ] Add Rate Limiting.
-
----
-
-**نصيحة تقنية:** هذا الـ README الآن يظهر للمسؤول عن التوظيف (Recruiter) أنكِ لستِ فقط "تعرفين NestJS"، بل تعرفين كيف تحمين النظام. هذا يعطي انطباعاً بأنكِ مبرمجة تهتمين بـ **"Best Practices"** وهذا هو جوهر الـ Senior Level Logic.
-
-هل ترغبين في أن أقوم برفع هذا الـ README ليكون جاهزاً للنسخ مباشرة؟
