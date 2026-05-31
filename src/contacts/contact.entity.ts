@@ -15,7 +15,9 @@ export enum ContactStatus {
 export class Contact {
   @PrimaryGeneratedColumn('uuid')
   id: string;
-
+// أضف هذا السطر داخل كلاس الـ Contact
+  @Column({ nullable: true })
+  jobTitle: string;
   @Column()
   firstName: string;
 

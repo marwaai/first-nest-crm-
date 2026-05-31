@@ -2,8 +2,12 @@ import { IsString, IsNotEmpty, IsEmail, IsOptional, IsPhoneNumber, IsUUID } from
 
 export class CreateContactDto {
   @IsString()
-  @IsNotEmpty({ message: 'Contact name is required' })
-  name: string;
+  @IsNotEmpty({ message: 'First name is required' })
+  firstName: string; // تم التعديل هنا
+
+  @IsString()
+  @IsOptional()
+  lastName?: string; // تم التعديل هنا
 
   @IsEmail({}, { message: 'Please provide a valid email address' })
   @IsNotEmpty()
