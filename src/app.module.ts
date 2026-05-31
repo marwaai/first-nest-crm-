@@ -12,6 +12,10 @@ import { AuthModule } from './auth/auth.module';
 import { CompaniesModule } from './companies/companies.module';
 import {ContactsModule} from "./contacts/contacts.module"
 import{DealsModule} from "./deals/deals.module"
+import { RolesModule } from './roles/roles.module';
+import {Permission} from "./roles/permission.entity"
+import {Role} from "./roles/roles.entity"
+import {SeedModule} from "./database/seed/seed.module"
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -26,7 +30,7 @@ import{DealsModule} from "./deals/deals.module"
         password: config.get('DB_PASSWORD'),
         database: config.get('DB_NAME'),
 
-        entities: [User, Contact, Company, Deal, Activity],
+        entities: [User, Contact, Company, Deal, Activity,Permission,Role],
         synchronize: true,
         logging: true,
       }),
@@ -35,7 +39,7 @@ import{DealsModule} from "./deals/deals.module"
     UsersModule,
     AuthModule,
     CompaniesModule,
-    ContactsModule,DealsModule
+    ContactsModule,DealsModule, RolesModule,SeedModule
   ],
 })
 export class AppModule {}

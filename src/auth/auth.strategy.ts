@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 
@@ -6,25 +6,24 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor() {
     super({
-      // 1. بيقول للبرنامج: روح هات التوكن من الـ Header اللي اسمه Authorization (Bearer Token)
+      // 1. استخراج التوكن من الـ Header كـ Bearer Token
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      
-      // 2. لو التوكن وقته خلص (Expired)، ارفضه فوراً
-      ignoreExpiration: false,
-      
-      // 3. السر العظيم: لازم يكون نفس الـ Secret اللي استخدمتيه في الـ Login
-      secretOrKey: process.env.JWT_SECRET as string,
-    });
+      ignoreExpiration: false, // رفض التوكن لو منتهي الصلاحية
+secretOrKey: process.env.JWT_SECRET!    });
   }
 
-  // 4. الفانكشن دي بتتنفذ "تلقائياً" لو التوكن طلع سليم
+  /**
+   * الميثود دي بتشتغل تلقائياً بعد ما يتم فك تشفير التوكن بنجاح
+   * الـ payload هو الكائن اللي إحنا عملنا له sign في الـ AuthService
+   */
   async validate(payload: any) {
-    // الـ payload هو البيانات اللي إنتي شفرتيها (زي id و role)
-    // اللي بيرجع هنا بيتحط أوتوماتيك في الـ Request Object (req.user)
+    // أي حاجة بنرجعها هنا، NestJS بيحطها في الـ req.user
     return { 
       userId: payload.sub, 
-      username: payload.username, 
-      role: payload.role // مهم جداً عشان الـ RolesGuard يعرف يقرأ الـ role
+      email: payload.email, 
+      role: payload.role,
+      // أهم سطر عشان الـ PermissionsGuard يشتغل:
+      permissions: payload.permissions 
     };
   }
 }

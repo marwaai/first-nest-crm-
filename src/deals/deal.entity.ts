@@ -24,58 +24,64 @@ export enum DealPriority {
 }
 
 @Entity('deals')
+@Entity('deals')
 export class Deal {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string; // استخدم ! لأن الـ ID بيتم إنشاؤه تلقائياً
 
   @Column()
-  title: string;
+  title!: string;
 
   @Column({ type: 'decimal', precision: 15, scale: 2, default: 0 })
-  value: number;
+  value!: number;
 
   @Column({ default: 'USD' })
-  currency: string;
+  currency!: string;
 
   @Column({ type: 'enum', enum: DealStage, default: DealStage.NEW })
-  stage: DealStage;
+  stage!: DealStage;
 
   @Column({ type: 'enum', enum: DealPriority, default: DealPriority.MEDIUM })
-  priority: DealPriority;
+  priority!: DealPriority;
 
-  @Column({ type: 'int', default: 0 })   // 0–100
-  probability: number;
+  @Column({ type: 'int', default: 0 })
+  probability!: number;
+
+  // بالنسبة للحقول الـ nullable، يفضل استخدام ? أو تحديد النوع مع null
+  @Column({ type: 'date', nullable: true })
+  expectedCloseDate?: Date | null;
 
   @Column({ type: 'date', nullable: true })
-  expectedCloseDate: Date;
-
-  @Column({ type: 'date', nullable: true })
-  actualCloseDate: Date;
+  actualCloseDate?: Date | null;
 
   @Column({ type: 'text', nullable: true })
-  lostReason: string;
+  lostReason?: string | null;
 
   @Column({ type: 'text', nullable: true })
-  notes: string;
+  notes?: string | null;
 
   @Column({ type: 'jsonb', nullable: true })
-  customFields: Record<string, any>;
+  customFields?: Record<string, any> | null;
 
+  // العلاقات (Relations) دايماً استخدم معاها ! أو اتركها Optional
   @ManyToOne(() => Contact, contact => contact.deals, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn()
-  contact: Contact;
+  contact!: Contact;
 
   @ManyToOne(() => Company, company => company.deals, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn()
-  company: Company;
+  company!: Company;
 
   @ManyToOne(() => User, user => user.deals, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn()
-  owner: User;
+  owner!: User;
 
   @OneToMany(() => Activity, activity => activity.deal)
-  activities: Activity[];
+  activities!: Activity[];
 
-  @CreateDateColumn() createdAt: Date;
-  @UpdateDateColumn() updatedAt: Date;
+  @CreateDateColumn() 
+  createdAt!: Date;
+
+  @UpdateDateColumn() 
+  updatedAt!: Date;
 }

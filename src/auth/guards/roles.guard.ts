@@ -1,26 +1,48 @@
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
+import { 
+  Injectable, 
+  CanActivate, 
+  ExecutionContext, 
+  ForbiddenException 
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { PERMISSIONS_KEY } from '../decorators/roles.decorator';
 
 @Injectable()
-export class RolesGuard implements CanActivate {
+export class PermissionsGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
-    // بيقرأ الـ Roles اللي إنتي كاتباها فوق الـ Endpoint (مثلاً 'admin')
-    const requiredRoles = this.reflector.getAllAndOverride<string[]>('roles', [
+    // 1. استخراج الصلاحيات المطلوبة من الديكوريتور (Metadata)
+    // نستخدم getAllAndOverride للبحث في الميثود أولاً ثم الكلاس
+    const requiredPermissions = this.reflector.getAllAndOverride<string[]>(PERMISSIONS_KEY, [
       context.getHandler(),
       context.getClass(),
     ]);
 
-    // لو الـ Endpoint مش متحدد لها Role معين، سيب اليوزر يدخل عادي
-    if (!requiredRoles) {
+    // 2. إذا لم يكن هناك صلاحيات محددة، اسمح بالوصول (مسار عام للمسجلين فقط)
+    if (!requiredPermissions || requiredPermissions.length === 0) {
       return true;
     }
 
-    // بيجيب اليوزر من الـ Request (اللي الـ JwtAuthGuard حطه هناك)
+    // 3. الحصول على بيانات المستخدم من الطلب (Request)
+    // ملاحظة: الـ JwtAuthGuard يجب أن يعمل قبل هذا الجارد ليملأ req.user
     const { user } = context.switchToHttp().getRequest();
+if (user.role=="admin"){
+  return true
+}
+    if (!user || !user.permissions) {
+      throw new ForbiddenException('لا تملك الصلاحيات الكافية للوصول لهذا المسار');
+    }
 
-    // بيتأكد: هل الرول بتاع اليوزر موجود ضمن الرولز المسموح لها؟
-    return requiredRoles.some((role) => user.role?.includes(role));
+    // 4. التحقق: هل المستخدم يمتلك "كل" الصلاحيات المطلوبة لهذا المسار؟
+    const hasAllPermissions = requiredPermissions.every((permission) =>
+      user.permissions.includes(permission),
+    );
+
+    if (!hasAllPermissions) {
+      throw new ForbiddenException('عذراً، دورك الوظيفي الحالي لا يسمح لك بهذا الإجراء');
+    }
+
+    return true;
   }
 }

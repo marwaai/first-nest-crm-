@@ -1,62 +1,82 @@
 import { 
   Controller, 
+  Get, 
   Post, 
   Body, 
-  Get, 
-  Patch,
-  Delete,
+  Patch, 
   Param, 
-  UseInterceptors, 
-  ClassSerializerInterceptor, 
-  UseGuards,ParseUUIDPipe
+  Delete, 
+  UseGuards, 
+  Request,
+  ParseUUIDPipe,
+  HttpStatus,
+  HttpCode
 } from '@nestjs/common';
 import { UsersService } from './user.service';
 import { CreateUserDto } from './dtos/signup.dto';
-import { UpdateUserDto } from './dtos/user.update'; // Import your new Update DTO
-import { UserRole } from './user.entity'; // Import the Enum
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'; 
-import { RolesGuard } from '../auth/guards/roles.guard';
-import { SetMetadata } from '@nestjs/common';
-
-// Custom Decorator logic
-export const Roles = (...roles: string[]) => SetMetadata('roles', roles);
+import { UpdateUserDto } from './dtos/user.update';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { PermissionsGuard } from '../auth/guards/roles.guard';
+import { CheckPermissions } from '../auth/decorators/roles.decorator';
 
 @Controller('users')
-@UseInterceptors(ClassSerializerInterceptor)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  // 1. PUBLIC SIGNUP: No roles allowed in DTO. Service forces 'agent'.
-  @Post('signup')
-  async signup(@Body() createUserDto: CreateUserDto) {
-    return await this.usersService.create(createUserDto);
+  /**
+   * تسجيل مستخدم جديد (Sign Up)
+   * مفتوحة للعامة - لا تحتاج Token أو صلاحيات
+   */
+  @Post()
+  @HttpCode(HttpStatus.CREATED)
+  create(@Body() createUserDto: CreateUserDto) {
+    return this.usersService.create(createUserDto);
   }
 
-
-  // 3. ADMIN ONLY: Delete User
-  @Delete(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN) 
-  async remove(@Param('id') id: string) {
-    return this.usersService.remove(id);
+  /**
+   * جلب بيانات البروفايل لليوزر الحالي
+   * تحتاج Token فقط (بدون برمشن محدد)
+   */
+  @Get('profile')
+  @UseGuards(JwtAuthGuard) // شلنا الـ PermissionsGuard هنا عشان البروفايل مش محتاج صلاحية معينة، محتاج يوزر مسجل بس
+  getProfile(@Request() req) {
+    return this.usersService.findById(req.user.userId);
   }
 
-  // 4. PROTECTED: Get user data (Must be logged in)
+  /**
+   * جلب مستخدم محدد بالـ ID
+   * الصلاحية المطلوبة: USER_VIEW_SINGLE
+   */
   @Get(':id')
-  @UseGuards(JwtAuthGuard)
-  async findOne(@Param('id') id: string) {
-    return await this.usersService.findById(id);
-  
+  @UseGuards(JwtAuthGuard, PermissionsGuard) // حماية! عشان الـ CheckPermissions تشتغل صح
+  @CheckPermissions('USER_VIEW_SINGLE')
+  findOne(@Param('id', ParseUUIDPipe) id: string) {
+    return this.usersService.findById(id);
   }
 
-@Patch(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN) // Security: Ensure only Admins can hit this logic
-  async updte(
-    @Param('id', ParseUUIDPipe) id: string, // Validates that the ID is a proper UUID
-    @Body() updateUserDto: UpdateUserDto    // The data we want to "merge"
+  /**
+   * تحديث بيانات مستخدم
+   * الصلاحية المطلوبة: USER_UPDATE
+   */
+  @Patch(':id')
+  @UseGuards(JwtAuthGuard, PermissionsGuard) // حماية! عشان الـ CheckPermissions تشتغل صح
+  @CheckPermissions('USER_UPDATE')
+  update(
+    @Param('id', ParseUUIDPipe) id: string, 
+    @Body() updateUserDto: UpdateUserDto
   ) {
-    // This calls the service method you provided
-    return await this.usersService.update(id, updateUserDto);
+    return this.usersService.update(id, updateUserDto);
+  }
+
+  /**
+   * حذف مستخدم نهائياً من النظام
+   * الصلاحية المطلوبة: USER_DELETE
+   */
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard, PermissionsGuard) // الترتيب الصحيح بدون أسطر فارغة
+  @CheckPermissions('USER_DELETE')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  remove(@Param('id', ParseUUIDPipe) id: string) {
+    return this.usersService.remove(id);
   }
 }

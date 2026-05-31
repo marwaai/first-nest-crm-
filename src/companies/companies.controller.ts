@@ -7,38 +7,33 @@ import {
   Patch,
   Delete,
   UseGuards,
-  Request, // ضيفيها لو محتاجة بيانات اليوزر
 } from '@nestjs/common';
 import { CompanyService } from './companies.service';
 import { CreateCompanyDto } from './dtos/create.company.dto';
 import { UpdateCompanyDto } from './dtos/update.company.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'; 
-import { RolesGuard } from '../auth/guards/roles.guard';
-import { SetMetadata } from '@nestjs/common';
+import { PermissionsGuard } from '../auth/guards/roles.guard';
+import { CheckPermissions } from '../auth/decorators/roles.decorator'; // استخدمي الديكوريتور الموحد بتاعك
 
-// يُفضل تحطي الـ Roles Decorator في ملف لوحده بس لو هنا شغال عادي
-export const Roles = (...roles: string[]) => SetMetadata('roles', roles);
-
-@Controller('companies') // <--- لازم تضيفي دي عشان يحدد الـ Base Path
+@Controller('companies')
+@UseGuards(JwtAuthGuard, PermissionsGuard) // حطيها فوق الكنترولر طالما كل الروتس محتاجة تأمين، ووحدي الترتيب
 export class CompanyController {
   constructor(private readonly companyService: CompanyService) {}
 
   @Post()
-  @Roles('admin',"manager") 
-  @UseGuards(JwtAuthGuard, RolesGuard) // الترتيب مهم: يتأكد إنه داخل (JWT) ثم يشوف صلاحياته (Roles)
+  @CheckPermissions('companies-create') // رقم 1 في جدول الـ role_permissions عندك!
   async create(@Body() createCompanyDto: CreateCompanyDto) {
     return await this.companyService.create(createCompanyDto);
   }
 
   @Get(':id')
-  @UseGuards(JwtAuthGuard) // لو عايزة أي حد معاه Token بس يشوف الشركة
+  @CheckPermissions('companies-read') // الصلاحية رقم 2 في جدول الـ role_permissions عندك
   async get(@Param('id') id: string) {
     return await this.companyService.get(id);
   }
 
   @Patch(':id')
-  @Roles('admin', 'manager') // ممكن تسمحي لأكثر من صلاحية بالتعديل
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @CheckPermissions('companies-update') // شيكي في الـ DB غالبا هتكون رقم 3
   async update(
     @Param('id') id: string,
     @Body() updateCompanyDto: UpdateCompanyDto,
@@ -47,8 +42,7 @@ export class CompanyController {
   }
 
   @Delete(':id')
-  @Roles('admin',"manager") // الحذف للأدمن فقط
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @CheckPermissions('companies-delete') // غالبا رقم 4
   async delete(@Param('id') id: string) {
     await this.companyService.delete(id);
     return { message: 'Company deleted successfully' };

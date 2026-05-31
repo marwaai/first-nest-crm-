@@ -1,49 +1,50 @@
 // users/user.entity.ts
 import {
   Entity, PrimaryGeneratedColumn, Column,
-  CreateDateColumn, UpdateDateColumn, OneToMany
+  CreateDateColumn, UpdateDateColumn, OneToMany,
+  ManyToOne, JoinColumn
 } from 'typeorm';
 import { Deal } from '../deals/deal.entity';
 import { Activity } from '../activities/activity.entity';
-
-export enum UserRole {
-  ADMIN = 'admin',
-  MANAGER = 'manager',
-  AGENT = 'agent',
-}
+import { Role } from '../roles/roles.entity'; // استيراد الـ Role Entity الجديد
 
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string; // TypeORM سيولدها تلقائياً
 
   @Column()
-  firstName: string;
+  firstName!: string;
 
   @Column()
-  lastName: string;
+  lastName!: string;
 
   @Column({ unique: true })
-  email: string;
+  email!: string;
 
   @Column({ select: false })       
-  password: string;
+  password!: string;
 
-  @Column({ type: 'enum', enum: UserRole, default: UserRole.AGENT })
-  role: UserRole;
+  @ManyToOne(() => Role, (role) => role.users, { 
+    nullable: false, 
+    onDelete: 'RESTRICT'
+  })
+  @JoinColumn({ name: 'role_id' })
+  role!: Role; // أصلحنا الخطأ هنا
 
   @Column({ default: true })
-  isActive: boolean;
+  isActive!: boolean;
 
   @Column({ nullable: true })
-  avatarUrl: string;
+  avatarUrl?: string; // استخدمنا ? لأنها nullable فعلياً
 
   @OneToMany(() => Deal, deal => deal.owner)
-  deals: Deal[];
+  deals!: Deal[]; // المصفوفات أيضاً تحتاج ! لضمان وجودها عند الـ Load
 
-  @OneToMany(() => Activity, activity => activity.createdBy)
-  activities: Activity[];
 
-  @CreateDateColumn() createdAt: Date;
-  @UpdateDateColumn() updatedAt: Date;
+  @CreateDateColumn() 
+  createdAt!: Date;
+
+  @UpdateDateColumn() 
+  updatedAt!: Date;
 }

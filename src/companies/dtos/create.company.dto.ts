@@ -13,7 +13,7 @@ import { CreateDealDto } from '../../deals/dto/create.deals.dto'; // Assuming th
 export class CreateCompanyDto {
   @IsString()
   @IsNotEmpty()
-  name: string;
+  name!: string;
 
   @IsOptional()
   @IsString()
